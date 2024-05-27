@@ -47,7 +47,7 @@ def get_user_by_id(id: int, db: Session = Depends(get_db)):
     return db_user
 
 
-@app.get('/username/{name}/')
+@app.get('/username/{name}/', response_model=User)
 def get_user_by_name(nickname: str, db: Session = Depends(get_db)):
     db_user = db.query(db_models.UserDB).filter(db_models.UserDB.nickname == nickname).first()
     if not db_user:
@@ -56,7 +56,7 @@ def get_user_by_name(nickname: str, db: Session = Depends(get_db)):
     return db_user
 
 
-@app.get('/users/')
+@app.get('/users/', response_model=list[User])
 def get_all_users(db: Session = Depends(get_db)):
     users = db.query(db_models.UserDB).all()
     return users
@@ -84,9 +84,6 @@ def get_user(nickname: str, db: Session = Depends(get_db)):
     return db_user
 
 
-@app.get("/hello/{name}/")
-async def say_hello(name: str):
-    return {"message": f"Hello {name}"}
 
 
 if __name__ == "__main__":
