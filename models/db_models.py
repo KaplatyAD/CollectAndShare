@@ -1,6 +1,6 @@
 from db.database import Base
 from sqlalchemy import Column, Integer, String, ForeignKey, Boolean, DateTime
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, Mapped
 
 
 class UserDB(Base):
@@ -13,6 +13,9 @@ class UserDB(Base):
     is_active = Column(Boolean, default=True)
 
     collection = relationship('AudioCollectionDB', back_populates='owner')
+
+    def __repr__(self):
+        return f'<UserDB(id={self.id}, nickname={self.nickname}, email={self.email}, is_active={self.is_active}, collection={self.collection})>'
 
 
 class AudioCollectionDB(Base):

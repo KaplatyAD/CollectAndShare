@@ -3,9 +3,10 @@ from fastapi import FastAPI, templating, Request, Depends, HTTPException
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from crud.crud_operations import create_user, get_user_by_email
 from models import db_models
+
 from db.database import SessionLocal, engine
 from schemas.user import User, UserCreate, AudioCollection, AudioCollectionCreate
 
@@ -34,7 +35,6 @@ def create_user_func(user: UserCreate, db: Session = Depends(get_db)):
     db.add(db_user)
     db.commit()
     db.refresh(db_user)
-    print(db_user.collection)
     return db_user
 
 
@@ -43,6 +43,7 @@ def get_user_by_id(id: int, db: Session = Depends(get_db)):
     db_user = db.query(db_models.UserDB).filter(db_models.UserDB.id == id).first()
     if not db_user:
         raise HTTPException(status_code=404, detail="User not found")
+    print((db_user))
     return db_user
 
 
@@ -51,6 +52,7 @@ def get_user_by_name(nickname: str, db: Session = Depends(get_db)):
     db_user = db.query(db_models.UserDB).filter(db_models.UserDB.nickname == nickname).first()
     if not db_user:
         raise HTTPException(status_code=404, detail="User not found")
+    print((db_user))
     return db_user
 
 
@@ -69,6 +71,12 @@ def add_collectable_to_user(id: int, item: AudioCollectionCreate, db: Session = 
     return db_item
 
 
+@app.get('/user/{id}/collectables/')
+def get_collectable_for_user(id: int, db: Session = Depends(get_db)):
+    db_item = db.query(db_models.AudioCollectionDB).filter(db_models.AudioCollectionDB.user_id == id).all()
+    return db_item
+
+
 @app.get('/login/')
 def get_user(nickname: str, db: Session = Depends(get_db)):
     db_user = db.query(db_models.UserDB).filter(db_models.UserDB.nickname == nickname).first()
@@ -82,4 +90,4 @@ async def say_hello(name: str):
 
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="127.0.0.1", port=8080)
+    uvicorn.run('main:app', port=8001, reload=True)
