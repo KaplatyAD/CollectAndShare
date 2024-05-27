@@ -1,7 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-
-from main import get_db
+from db.database import get_db
 from models import db_models
 from schemas.user import AudioCollectionCreate
 

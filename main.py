@@ -6,27 +6,20 @@ from fastapi.responses import HTMLResponse
 from sqlalchemy.orm import Session, joinedload
 from crud.crud_operations import create_user, get_user_by_email
 from models import db_models
-
-from db.database import SessionLocal, engine
+from routes.user_routes import user_router
+from db.database import SessionLocal, engine, get_db
 from schemas.user import User, UserCreate, AudioCollection, AudioCollectionCreate
 
 db_models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
+app.include_router(user_router)
 templates = Jinja2Templates(directory="templates")
 
 
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-
-@app.get("/")
-async def root():
-    return {"message": "Hello World"}
+@app.get('/')
+def home_page():
+    return {"message": "API для веб приложения, помогающего организовать свою аудио библиотелку"}
 
 
 @app.post('/login/')
@@ -36,9 +29,6 @@ def create_user_func(user: UserCreate, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(db_user)
     return db_user
-
-
-
 
 
 @app.get('/username/{name}/', response_model=User)
@@ -56,16 +46,11 @@ def get_all_users(db: Session = Depends(get_db)):
     return users
 
 
-
-
-
 @app.get('/login/')
 def get_user(nickname: str, db: Session = Depends(get_db)):
     db_user = db.query(db_models.UserDB).filter(db_models.UserDB.nickname == nickname).first()
     print(db_user)
     return db_user
-
-
 
 
 if __name__ == "__main__":
