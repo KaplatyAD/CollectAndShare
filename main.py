@@ -1,9 +1,9 @@
 import uvicorn
-from fastapi import FastAPI, templating, Request, Depends, HTTPException
-from fastapi.templating import Jinja2Templates
+from fastapi import FastAPI, templating, Request, Depends, HTTPException, Form
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse
 from sqlalchemy.orm import Session, joinedload
+from starlette.templating import Jinja2Templates
 from crud.crud_operations import create_user, get_user_by_email
 from models import db_models
 from routes.user_routes import user_router
@@ -14,6 +14,7 @@ db_models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 app.include_router(user_router)
+
 templates = Jinja2Templates(directory="templates")
 
 
@@ -22,13 +23,12 @@ def home_page():
     return {"message": "API для веб приложения, помогающего организовать свою аудио библиотелку"}
 
 
-@app.post('/login/')
+@app.post('/register/')
 def create_user_func(user: UserCreate, db: Session = Depends(get_db)):
-    db_user = db_models.UserDB(nickname=user.nickname, email=user.email, hashed_password=user.password)
-    db.add(db_user)
-    db.commit()
-    db.refresh(db_user)
-    return db_user
+    db_user = get_user_by_email(db, user.email)
+    if db_user:
+        raise HTTPException(status_code=404, detail="User already exists")
+    return create_user(db, user)
 
 
 @app.get('/username/{name}/', response_model=User)
@@ -36,7 +36,6 @@ def get_user_by_name(nickname: str, db: Session = Depends(get_db)):
     db_user = db.query(db_models.UserDB).filter(db_models.UserDB.nickname == nickname).first()
     if not db_user:
         raise HTTPException(status_code=404, detail="User not found")
-    print((db_user))
     return db_user
 
 
@@ -46,11 +45,14 @@ def get_all_users(db: Session = Depends(get_db)):
     return users
 
 
-@app.get('/login/')
-def get_user(nickname: str, db: Session = Depends(get_db)):
-    db_user = db.query(db_models.UserDB).filter(db_models.UserDB.nickname == nickname).first()
-    print(db_user)
-    return db_user
+# @app.get('/login/', response_class=HTMLResponse)
+# def login_page(request: Request):
+#     return templates.TemplateResponse('login.html', {"request": request})
+#
+# @app.post('/login/')
+# def login_page(request: Request, username: str = Form()):
+#
+#     return templates.TemplateResponse('login.html', {"request": request})
 
 
 if __name__ == "__main__":
