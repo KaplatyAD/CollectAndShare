@@ -34,6 +34,7 @@ def create_user_func(user: UserCreate, db: Session = Depends(get_db)):
 @app.get('/username/{name}/', response_model=User)
 def get_user_by_name(nickname: str, db: Session = Depends(get_db)):
     db_user = db.query(db_models.UserDB).filter(db_models.UserDB.nickname == nickname).first()
+
     if not db_user:
         raise HTTPException(status_code=404, detail="User not found")
     return db_user
