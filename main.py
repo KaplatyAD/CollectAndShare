@@ -46,11 +46,14 @@ def get_all_users(db: Session = Depends(get_db)):
 # def login_page(request: Request):
 #     return templates.TemplateResponse('login.html', {"request": request})
 #
-@app.get('/login/', tags=["auth"])
+@app.get('/login', tags=['auth'])
 def login(user: user_dependency):
+    print('test')
     if user is None:
         raise HTTPException(status_code=401, detail="User not found")
+    print('login')
     return {"user": user}
+
 
 
 if __name__ == "__main__":

@@ -4,7 +4,7 @@ from db.database import get_db
 from models import db_models
 from schemas.user import AudioCollectionCreate
 
-user_router = APIRouter(prefix="/user")
+user_router = APIRouter(prefix="/user", tags=["user"])
 
 
 @user_router.get('/{id}/')

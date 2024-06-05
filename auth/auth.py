@@ -10,6 +10,7 @@ from typing import Annotated
 import db
 from crud.crud_operations import get_user_by_email
 from db.database import get_db
+
 from models.db_models import UserDB
 from schemas.user import User, Token, UserCreate
 from config import SECRET_KEY, ALGORITHM
@@ -17,7 +18,7 @@ from config import SECRET_KEY, ALGORITHM
 auth = APIRouter(prefix="/auth", tags=["auth"])
 
 bcrypt_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-oauth2_bearer = OAuth2PasswordBearer(tokenUrl="/auth/login")
+oauth2_bearer = OAuth2PasswordBearer(tokenUrl="/auth/token")
 
 
 @auth.post('/', status_code=status.HTTP_201_CREATED)
@@ -33,7 +34,8 @@ async def create_user_func(user: UserCreate, db: Session = Depends(get_db)):
 
 
 @auth.post('/token', response_model=Token)
-async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
+async def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
+                                 db: Session = Depends(get_db)):
     user = authenticate_user(form_data.username, form_data.password, db)
     if not user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Incorrect username or password")
@@ -64,6 +66,7 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_bearer)]):
         user_id: int = payload.get('id')
         if nickname is None or user_id is None:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Could not validate credentials")
+        print('print from get cur user')
         return {'user_id': user_id, 'username': nickname}
     except JWTError:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Could not validate credentials")
