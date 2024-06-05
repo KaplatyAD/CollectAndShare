@@ -24,13 +24,15 @@ class UserCreate(BaseModel):
     hashed_password: str
 
 
-
 class User(UserCreate):
     id: int
     is_active: bool
     collection: List[AudioCollection] = []
+
     class Config:
         from_attributes = True
 
 
-
+class Token(BaseModel):
+    access_token: str
+    token_type: str

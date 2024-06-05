@@ -15,6 +15,7 @@ def get_user_by_id(id: int, db: Session = Depends(get_db)):
     print((db_user))
     return db_user
 
+
 @user_router.delete('/{id}/')
 def delete_user_by_id(id: int, db: Session = Depends(get_db)):
     obj = db.query(db_models.UserDB).filter(db_models.UserDB.id == id).first()
@@ -23,9 +24,11 @@ def delete_user_by_id(id: int, db: Session = Depends(get_db)):
     obj_collection = db.query(db_models.AudioCollectionDB).filter(
         db_models.AudioCollectionDB.user_id == id).all()
     db.delete(obj)
-    db.delete(obj_collection)
+    if obj_collection:
+        db.delete(obj_collection)
     db.commit()
     return {'message': 'user was_deleted'}
+
 
 @user_router.post('/{id}/collectables/')
 def add_collectable_to_user(id: int, item: AudioCollectionCreate, db: Session = Depends(get_db)):
