@@ -26,11 +26,14 @@ async def create_user_func(user: UserCreate, db: Session = Depends(get_db)):
     db_user = get_user_by_email(db, user.email)
     if db_user:
         raise HTTPException(status_code=404, detail="User already exists")
-    create_user = UserDB(nickname=user.nickname, email=user.email,
-                         hashed_password=bcrypt_context.hash(user.hashed_password))
-    db.add(create_user)
-    db.commit()
-    return create_user
+    if email_validator(user.email):
+        create_user = UserDB(nickname=user.nickname, email=user.email,
+                             hashed_password=bcrypt_context.hash(user.hashed_password))
+        db.add(create_user)
+        db.commit()
+        return create_user
+    else:
+        raise HTTPException(status_code=404, detail="Check email and password")
 
 
 @auth.post('/token', response_model=Token)
@@ -70,3 +73,18 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_bearer)]):
         return {'user_id': user_id, 'username': nickname}
     except JWTError:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Could not validate credentials")
+
+
+def email_validator(email: str):
+    import re
+    res = re.search(r"[a-zA-Z0-9]@[a-zA-Z0-9]+\.[a-zA-Z]{2,}$", email)
+    return res
+
+
+
+def search(url):
+    import re
+    url = re.search(r"\..+\.",  url)
+    return url.group(0)[1:-1]
+
+print(search("http://www.google.com"))
